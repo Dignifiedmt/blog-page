@@ -1,4 +1,44 @@
-<!DOCTYPE html>
+
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,9 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        body { font-family: 'Inter', sans-serif; }
         .post-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -23,6 +61,12 @@
             width: 100%;
             object-fit: cover;
         }
+        .error-message {
+            display: none;
+            color: red;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -32,18 +76,16 @@
                 <i class="fa-solid fa-desktop text-5xl mr-4"></i>
                 <h1 class="text-4xl md:text-5xl font-bold">Dignity Tech Journey</h1>
             </div>
-            <p class="text-lg md:text-xl max-w-2xl mx-auto mb-6">Join me on my tech journey, sharing insights, experiences, and tech awareness through articles, images, and videos.</p>
+            <p class="text-lg md:text-xl max-w-2xl mx-auto mb-6">Hey there! I'm thrilled to kick off this blog and share my adventures in the world of tech. From coding experiments to exploring new tools and trends, this space will capture my learning, projects, and insights. Whether you're a fellow tech enthusiast or just curious, join me as I dive into the exciting, ever-evolving world of technology. Let's learn, build, and grow together!</p>
             <img src="hero.png" alt="Hero Profile" class="mx-auto rounded-full w-32 h-32 shadow-lg">
         </div>
     </header>
 
     <div class="container mx-auto p-4 max-w-6xl">
-        <!-- Search bar -->
         <div class="mb-6">
             <input type="text" id="search" placeholder="Search articles by title or content..." class="w-full p-3 border border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
         </div>
 
-        <!-- Form to add/edit post -->
         <form id="postForm" class="bg-white p-6 rounded-lg shadow-lg mb-8">
             <input type="hidden" id="postId" value="">
             <div class="mb-4">
@@ -55,17 +97,13 @@
                 <textarea id="content" rows="6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Share your tech journey or insights..." required></textarea>
             </div>
             <div class="mb-4">
-                <label for="imageUrl" class="block text-sm font-medium text-gray-700">Image/Video URL (e.g., from Unsplash, optional)</label>
-                <input type="url" id="imageUrl" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="e.g., https://source.unsplash.com/random/800x400/?tech">
-            </div>
-            <div class="mb-4">
-                <label for="mediaFile" class="block text-sm font-medium text-gray-700">Upload Image/Video (optional, max 10MB)</label>
+                <label for="mediaFile" class="block text-sm font-medium text-gray-700">Upload Image/Video (optional, max 25MB)</label>
                 <input type="file" id="mediaFile" accept="image/*,video/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
             </div>
+            <div id="errorMessage" class="error-message"></div>
             <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Add Article</button>
         </form>
 
-        <!-- Posts display area -->
         <div id="posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
 
@@ -73,29 +111,19 @@
         <div class="container mx-auto px-4 text-center">
             <p class="text-sm">&copy; 2025 Dignity Tech Journey. Sharing my tech journey and spreading tech awareness.</p>
             <div class="mt-2 flex justify-center space-x-4">
-                <a href="https://www.facebook.com/devkhadijamtasiu" target="_blank" class="text-indigo-300 hover:text-indigo-100">
-                    <i class="fab fa-facebook-f mr-1"></i>
-                </a>
-                <a href="https://x.com/Dignifiedmt?s=09" target="_blank" class="text-indigo-300 hover:text-indigo-100">
-                    <i class="fab fa-x-twitter mr-1"></i><b>X</b>
-                </a>
-                <a href="https://linkedin.com/in/khadija-muhammad-tasiu-407240288" target="_blank" class="text-indigo-300 hover:text-indigo-100">
-                    <i class="fab fa-linkedin-in mr-1"></i></a>
-                <a href="https://github.com/Dignifiedmt" target="_blank" class="text-indigo-300 hover:text-indigo-100">
-                    <i class="fab fa-github mr-1"></i>
-                </a>
+                <a href="https://www.facebook.com/devkhadijamtasiu" target="_blank" class="text-indigo-300 hover:text-indigo-100"><i class="fab fa-facebook-f mr-1"></i>Facebook</a>
+                <a href="https://x.com/Dignitymt?s=09" target="_blank" class="text-indigo-300 hover:text-indigo-100"><i class="fab fa-x-twitter mr-1"></i>X</a>
+                <a href="https://linkedin.com/in/khadija-muhammad-tasiu-407240288" target="_blank" class="text-indigo-300 hover:text-indigo-100"><i class="fab fa-linkedin-in mr-1"></i>LinkedIn</a>
+                <a href="https://github.com/Dignifiedmt" target="_blank" class="text-indigo-300 hover:text-indigo-100"><i class="fab fa-github mr-1"></i>GitHub</a>
             </div>
         </div>
     </footer>
 
     <script type="module">
-        // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
         import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
 
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBI8tQRf6qJZjB4liFEUnywBa5Xktprbm4",
             authDomain: "blog-page-b5206.firebaseapp.com",
@@ -106,17 +134,19 @@
             measurementId: "G-C2PVCE74ZE"
         };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+        let app, db, analytics;
+        try {
+            app = initializeApp(firebaseConfig);
+            analytics = getAnalytics(app);
+            db = getFirestore(app);
+            logEvent(analytics, 'page_view', { page_title: 'Dignity Tech Journey' });
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error.message, error.code);
+            showError('Cannot connect to Firebase. Check your setup.');
+        }
 
-        // Log page view event
-        logEvent(analytics, 'page_view', { page_title: 'Dignity Tech Journey' });
-
-        // Reference to Firestore collection
-        const postsRef = collection(db, 'posts');
+        const postsRef = db ? collection(db, 'posts') : null;
 
         let allPosts = [];
 
@@ -126,10 +156,48 @@
             <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>`;
 
-        // Function to display posts
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = message;
+            setTimeout(() => { errorDiv.style.display = 'none'; }, 5000);
+        }
+
+        window.addEventListener('online', () => console.log('Network online'));
+        window.addEventListener('offline', () => {
+            console.warn('Network offline');
+            showError('You are offline. Check your internet connection.');
+        });
+
+        async function uploadToCloudinary(file) {
+            const cloudName = 'YOUR_CLOUDINARY_CLOUD_NAME'; // Replace with your Cloudinary Cloud Name
+            const uploadPreset = 'blog-page'; // Your provided preset
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', uploadPreset);
+
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.secure_url) {
+                    return { url: data.secure_url, type: file.type.startsWith('video/') ? 'video' : 'image' };
+                } else {
+                    throw new Error('Cloudinary upload failed: ' + (data.error?.message || 'Unknown error'));
+                }
+            } catch (error) {
+                throw error;
+            }
+        }
+
         function displayPosts(posts) {
             const postsContainer = document.getElementById('posts');
-            postsContainer.innerHTML = ''; // Clear existing posts
+            postsContainer.innerHTML = '';
+            if (posts.length === 0) {
+                postsContainer.innerHTML = '<p class="text-gray-500 text-center col-span-full">No posts found. Add your first article!</p>';
+            }
             posts.forEach(post => {
                 const postElement = document.createElement('div');
                 postElement.classList.add('post-card', 'bg-white', 'p-6', 'rounded-lg', 'shadow-md');
@@ -159,23 +227,30 @@
             });
         }
 
-        // Real-time listener for posts
-        const q = query(postsRef, orderBy('timestamp', 'desc'));
-        onSnapshot(q, (snapshot) => {
-            allPosts = [];
-            snapshot.forEach((doc) => {
-                allPosts.push({ id: doc.id, ...doc.data() });
+        if (postsRef) {
+            const q = query(postsRef, orderBy('timestamp', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                allPosts = [];
+                snapshot.forEach((doc) => {
+                    allPosts.push({ id: doc.id, ...doc.data() });
+                });
+                console.log('Fetched posts:', allPosts);
+                const searchTerm = document.getElementById('search').value.toLowerCase();
+                const filteredPosts = filterPosts(allPosts, searchTerm);
+                displayPosts(filteredPosts);
+            }, (error) => {
+                console.error('Firestore snapshot error:', error.message, error.code);
+                showError('Cannot load posts: ' + error.message);
+                if (error.code === 'failed-precondition') {
+                    showError('Firestore API may be disabled. Enable it in Google Cloud Console.');
+                } else if (error.code === 'permission-denied') {
+                    showError('Check Firestore security rules in Firebase Console.');
+                }
             });
-            console.log('Fetched posts:', allPosts);
-            const searchTerm = document.getElementById('search').value.toLowerCase();
-            const filteredPosts = filterPosts(allPosts, searchTerm);
-            displayPosts(filteredPosts);
-        }, (error) => {
-            console.error('Snapshot error:', error.message, error.code);
-            alert('Failed to fetch posts: ' + error.message);
-        });
+        } else {
+            showError('Firestore not available. Check Firebase configuration.');
+        }
 
-        // Function to filter posts
         function filterPosts(posts, term) {
             if (!term) return posts;
             return posts.filter(post => 
@@ -184,15 +259,17 @@
             );
         }
 
-        // Search input event listener
         document.getElementById('search').addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const filteredPosts = filterPosts(allPosts, term);
             displayPosts(filteredPosts);
         });
 
-        // Event delegation for edit and delete buttons
         document.getElementById('posts').addEventListener('click', async (e) => {
+            if (!db) {
+                showError('Firestore not available.');
+                return;
+            }
             if (e.target.classList.contains('edit-btn')) {
                 const id = e.target.dataset.id;
                 const post = allPosts.find(p => p.id === id);
@@ -200,66 +277,53 @@
                     document.getElementById('postId').value = post.id;
                     document.getElementById('title').value = post.title;
                     document.getElementById('content').value = post.content;
-                    document.getElementById('imageUrl').value = post.mediaUrl || '';
-                    document.getElementById('mediaFile').value = ''; // Clear file input
+                    document.getElementById('mediaFile').value = '';
                     document.querySelector('#postForm button').textContent = 'Update Article';
                 }
             } else if (e.target.classList.contains('delete-btn')) {
                 const id = e.target.dataset.id;
-                const mediaUrl = e.target.dataset.media;
                 if (confirm('Are you sure you want to delete this article?')) {
                     try {
-                        // Delete media from Storage if it exists
-                        if (mediaUrl && !mediaUrl.includes('unsplash')) {
-                            const storageRef = ref(storage, mediaUrl);
-                            await deleteObject(storageRef).catch(err => console.warn('Error deleting media:', err));
-                        }
-                        // Delete post from Firestore
+                        // Note: Cloudinary deletion requires signed API calls, omitted for simplicity
                         await deleteDoc(doc(db, 'posts', id));
                         console.log('Post deleted:', id);
                         logEvent(analytics, 'post_deleted', { post_id: id });
                     } catch (error) {
                         console.error('Error deleting article:', error.message, error.code);
-                        alert('Failed to delete article: ' + error.message);
+                        showError('Failed to delete article: ' + error.message);
                     }
                 }
             }
         });
 
-        // Handle form submission to add or update post
         document.getElementById('postForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!db) {
+                showError('Firestore not available.');
+                return;
+            }
             const postId = document.getElementById('postId').value;
             const title = document.getElementById('title').value;
             const content = document.getElementById('content').value;
-            const imageUrl = document.getElementById('imageUrl').value;
             const mediaFile = document.getElementById('mediaFile').files[0];
 
             try {
-                let mediaUrl = imageUrl;
-                let mediaType = imageUrl ? (imageUrl.match(/\.(mp4|webm|ogg)$/i) ? 'video' : 'image') : null;
+                let mediaUrl = null;
+                let mediaType = null;
 
-                // Handle file upload if present
                 if (mediaFile) {
-                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    const maxSize = 25 * 1024 * 1024; // 25MB
                     if (mediaFile.size > maxSize) {
-                        alert('File size exceeds 10MB limit.');
+                        showError('File size exceeds 25MB limit.');
                         return;
                     }
-                    const storageRef = ref(storage, `media/${Date.now()}_${mediaFile.name}`);
-                    await uploadBytes(storageRef, mediaFile);
-                    mediaUrl = await getDownloadURL(storageRef);
-                    mediaType = mediaFile.type.startsWith('video/') ? 'video' : 'image';
-                    console.log('Media uploaded:', mediaUrl);
+                    const uploadResult = await uploadToCloudinary(mediaFile);
+                    mediaUrl = uploadResult.url;
+                    mediaType = uploadResult.type;
+                    console.log('Media uploaded to Cloudinary:', mediaUrl);
                 }
 
                 if (postId) {
-                    // Update existing post
-                    const existingPost = allPosts.find(p => p.id === postId);
-                    if (existingPost.mediaUrl && existingPost.mediaUrl !== mediaUrl && !existingPost.mediaUrl.includes('unsplash')) {
-                        const oldStorageRef = ref(storage, existingPost.mediaUrl);
-                        await deleteObject(oldStorageRef).catch(err => console.warn('Error deleting old media:', err));
-                    }
                     await updateDoc(doc(db, 'posts', postId), {
                         title,
                         content,
@@ -269,7 +333,6 @@
                     console.log('Post updated:', postId);
                     logEvent(analytics, 'post_updated', { title });
                 } else {
-                    // Add new post
                     await addDoc(postsRef, {
                         title,
                         content,
@@ -280,16 +343,22 @@
                     console.log('Post added:', title);
                     logEvent(analytics, 'post_added', { title });
                 }
-                // Clear form
+
                 document.getElementById('postId').value = '';
                 document.getElementById('title').value = '';
                 document.getElementById('content').value = '';
-                document.getElementById('imageUrl').value = '';
                 document.getElementById('mediaFile').value = '';
                 document.querySelector('#postForm button').textContent = 'Add Article';
             } catch (error) {
                 console.error('Error saving article:', error.message, error.code);
-                alert('Failed to save article: ' + error.message);
+                showError('Failed to save article: ' + error.message);
+                if (error.code === 'failed-precondition') {
+                    showError('Firestore API may be disabled. Enable it in Google Cloud Console.');
+                } else if (error.code === 'permission-denied') {
+                    showError('Check Firestore security rules in Firebase Console.');
+                } else if (error.message.includes('Cloudinary')) {
+                    showError('Cloudinary upload failed. Check Cloud Name and Upload Preset.');
+                }
             }
         });
     </script>
