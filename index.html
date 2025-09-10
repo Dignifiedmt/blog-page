@@ -1,40 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="description" content="Portfolio of Khadija Muhammad Tasiu" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portfolio - Khadija Muhammad Tasiu</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dignity Tech Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .post-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        video {
+            max-height: 48rem;
+            width: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
-
-<body>
-    <!-- HEADER / NAVBAR -->
-    <header class="header">
-        <nav class="nav container">
-            <div class="nav-logo">
-                <i class="fas fa-laptop"></i> Dev Dignified
+<body class="bg-gray-50">
+    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex justify-center items-center mb-3">
+                <i class="fa-solid fa-desktop text-5xl mr-4"></i>
+                <h1 class="text-4xl md:text-5xl font-bold">Dignity Tech Journey</h1>
             </div>
-            <div class="nav-actions">
-        
-                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
-                  <i class="fas fa-moon"></i>
-                </button>
+            <p class="text-lg md:text-xl max-w-2xl mx-auto mb-6">Join me on my tech journey, sharing insights, experiences, and tech awareness through articles, images, and videos.</p>
+            <img src="prof.png" alt="Hero Profile" class="mx-auto rounded-full w-32 h-32 shadow-lg">
+        </div>
+    </header>
 
-                <div class="hamburger" id="hamburger">
-                    <i class="fas fa-bars"></i>
-                </div>
+    <div class="container mx-auto p-4 max-w-6xl">
+        <!-- Search bar -->
+        <div class="mb-6">
+            <input type="text" id="search" placeholder="Search articles by title or content..." class="w-full p-3 border border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+        </div>
+
+        <!-- Form to add/edit post -->
+        <form id="postForm" class="bg-white p-6 rounded-lg shadow-lg mb-8">
+            <input type="hidden" id="postId" value="">
+            <div class="mb-4">
+                <label for="title" class="block text-sm font-medium text-gray-700">Article Title</label>
+                <input type="text" id="title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="e.g., My Journey with JavaScript Frameworks" required>
             </div>
-            <!-- Nav Links -->
+            <div class="mb-4">
+                <label for="content" class="block text-sm font-medium text-gray-700">Article Content</label>
+                <textarea id="content" rows="6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Share your tech journey or insights..." required></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="imageUrl" class="block text-sm font-medium text-gray-700">Image/Video URL (e.g., from Unsplash, optional)</label>
+                <input type="url" id="imageUrl" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="e.g., https://source.unsplash.com/random/800x400/?tech">
+            </div>
+            <div class="mb-4">
+                <label for="mediaFile" class="block text-sm font-medium text-gray-700">Upload Image/Video (optional, max 10MB)</label>
+                <input type="file" id="mediaFile" accept="image/*,video/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Add Article</button>
+        </form>
+
+        <!-- Posts display area -->
+        <div id="posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm">&copy; 2025 Dignity Tech Journey. Sharing my tech journey and spreading tech awareness.</p>
+            <div class="mt-2 flex justify-center space-x-4">
+                <a href="https://www.facebook.com/devkhadijamtasiu" target="_blank" class="text-indigo-300 hover:text-indigo-100"><i class="fab fa-facebook-f mr-1"></i>Facebook</a>
+                <a href="https://x.com/Dignifiedmt?s=09" target="_blank" class="text-indigo-300 hover:text-indigo-100"><i class="fab fa-x-twitter mr-1"></i>X</a>
+                <a href="https://linkedin.com/in/khadija-muhammad-tasiu-407240288" target="_blank" class="text-indigo-300 hover:text-indigo-100"><i class="fab fa-linkedin-in mr-1"></i>LinkedIn</a>
+                <a href="https://github.com/Dignifiedmt" target="_blank" class="text-indigo-300 hover:text-indigo-100"><i class="fab fa-github mr-1"></i>GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+        import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8kWPz-iGBm0jcVxY6lwPRLTuwUoIyBzY",
+            authDomain: "sample-33af9.firebaseapp.com",
+            projectId: "sample-33af9",
+            storageBucket: "sample-33af9.firebasestorage.app",
+            messagingSenderId: "517599157109",
+            appId: "1:517599157109:web:0f2416a0c85a4355d2513c",
+            measurementId: "G-88TK3Y399Q"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // Log page view event
+        logEvent(analytics, 'page_view', { page_title: 'Dignity Tech Journey' });
+
+        // Reference to Firestore collection
+        const postsRef = collection(db, 'posts');
+
+        let allPosts = [];
+
+        const defaultSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-48 text-gray-400">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>`;
+
+        // Function to display posts
+        function displayPosts(posts) {
+            const postsContainer = document.getElementById('posts');
+            postsContainer.innerHTML = ''; // Clear existing posts
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.classList.add('post-card', 'bg-white', 'p-6', 'rounded-lg', 'shadow-md');
+                const mediaSrc = post.mediaUrl;
+                const isVideo = post.mediaType === 'video';
+                let mediaHtml = '';
+                if (mediaSrc) {
+                    if (isVideo) {
+                        mediaHtml = `<video controls src="${mediaSrc}" class="w-full h-48 rounded-t-lg mb-4"></video>`;
+                    } else {
+                        mediaHtml = `<img src="${mediaSrc}" alt="${post.title}" class="w-full h-48 object-cover rounded-t-lg mb-4">`;
+                    }
+                } else {
+                    mediaHtml = defaultSvg;
+                }
+                postElement.innerHTML = `
+                    ${mediaHtml}
+                    <h2 class="text-xl font-semibold mb-2 text-gray-800">${post.title}</h2>
+                    <p class="text-gray-600 mb-4 line-clamp-3">${post.content}</p>
+                    <p class="text-sm text-gray-500 mb-4">Posted on: ${post.timestamp ? new Date(post.timestamp.seconds * 1000).toLocaleString() : 'N/A'}</p>
+                    <div class="flex justify-end space-x-2">
+                        <button class="edit-btn bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 text-sm" data-id="${post.id}">Edit</button>
+                        <button class="delete-btn bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 text-sm" data-id="${post.id}">Delete</button>
+                    </div>
+                `;
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        // Real-time listener for posts
+        const q = query(postsRef, orderBy('timestamp', 'desc'));
+        onSnapshot(q, (snapshot) => {
+            allPosts = [];
+            snapshot.forEach((doc) => {
+                allPosts.push({ id: doc.id, ...doc.data() });
+            });
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const filteredPosts = filterPosts(allPosts, searchTerm);
+            displayPosts(filteredPosts);
+        });
+
+        // Function to filter posts
+        function filterPosts(posts, term) {
+            if (!term) return posts;
+            return posts.filter(post => 
+                post.title.toLowerCase().includes(term) || 
+                post.content.toLowerCase().includes(term)
+            );
+        }
+
+        // Search input event listener
+        document.getElementById('search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filteredPosts = filterPosts(allPosts, term);
+            displayPosts(filteredPosts);
+        });
+
+        // Event delegation for edit and delete buttons
+        document.getElementById('posts').addEventListener('click', async (e) => {
+            if (e.target.classList.contains('edit-btn')) {
+                const id = e.target.dataset.id;
+                const post = allPosts.find(p => p.id === id);
+                if (post) {
+                    document.getElementById('postId').value = post.id;
+                    document.getElementById('title').value = post.title;
+                    document.getElementById('content').value = post.content;
+                    document.getElementById('imageUrl').value = post.mediaUrl || '';
+                    document.getElementById('mediaFile').value = ''; // Clear file input
+                    document.querySelector('#postForm button').textContent = 'Update Article';
+                }
+            } else if (e.target.classList.contains('delete-btn')) {
+                const id = e.target.dataset.id;
+                if (confirm('Are you sure you want to delete this article?')) {
+                    try {
+                        await deleteDoc(doc(db, 'posts', id));
+                        logEvent(analytics, 'post_deleted', { post_id: id });
+                    } catch (error) {
+                        console.error('Error deleting article: ', error);
+                    }
+                }
+            }
+        });
+
+        // Handle form submission to add or update post
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const postId = document.getElementById('postId').value;
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const imageUrl = document.getElementById('imageUrl').value;
+            const mediaFile = document.getElementById('mediaFile').files[0];
+
+            try {
+                let mediaUrl = imageUrl;
+                let mediaType = imageUrl ? (imageUrl.match(/\.(mp4|webm|ogg)$/i) ? 'video' : 'image') : null;
+
+                // Handle file upload if present
+                if (mediaFile) {
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    if (mediaFile.size > maxSize) {
+                        alert('File size exceeds 10MB limit.');
+                        return;
+                    }
+                    const storageRef = ref(storage, `media/${Date.now()}_${mediaFile.name}`);
+                    await uploadBytes(storageRef, mediaFile);
+                    mediaUrl = await getDownloadURL(storageRef);
+                    mediaType = mediaFile.type.startsWith('video/') ? 'video' : 'image';
+                }
+
+                if (postId) {
+                    // Update existing post
+                    await updateDoc(doc(db, 'posts', postId), {
+                        title,
+                        content,
+                        mediaUrl,
+                        mediaType
+                    });
+                    logEvent(analytics, 'post_updated', { title });
+                } else {
+                    // Add new post
+                    await addDoc(postsRef, {
+                        title,
+                        content,
+                        mediaUrl,
+                        mediaType,
+                        timestamp: serverTimestamp()
+                    });
+                    logEvent(analytics, 'post_added', { title });
+                }
+                // Clear form
+                document.getElementById('postId').value = '';
+                document.getElementById('title').value = '';
+                document.getElementById('content').value = '';
+                document.getElementById('imageUrl').value = '';
+                document.getElementById('mediaFile').value = '';
+                document.querySelector('#postForm button').textContent = 'Add Article';
+            } catch (error) {
+                console.error('Error saving article: ', error);
+            }
+        });
+    </script>
+</body>
+            </html>            <!-- Nav Links -->
             <ul class="nav-links" id="nav-links">
                 <li class="close-btn">
                     <a href="javascript:void(0)" id="close-btn">
